@@ -25,11 +25,7 @@ object LoginData {
       EMAIL_FIELD_NAME -> email,
       PASSWORD_FIELD_NAME -> nonEmptyText(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
     )(LoginData.apply)(LoginData.unapply)
-      verifying("Current user is already signed up!", { fields => fields match {
-      case LoginData(eMail, password) => checkDublicateUser(eMail, password).isDefined
-    }
-    })
-      verifying("Invalid user name or password", { fields => fields match {
+    verifying("Invalid user name or password", { fields => fields match {
       case LoginData(eMail, password) => Users.get(eMail, password).isDefined
     }
     })
