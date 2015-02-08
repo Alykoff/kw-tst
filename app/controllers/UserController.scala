@@ -1,36 +1,65 @@
 package controllers
 
-import play.api.libs.concurrent.Promise
+import models.{ThinUser, User, Users}
+import play.api.libs.json.JsError
 import play.api.mvc._
+import play.api.libs.json._
+import play.api.libs.json.util._
+import play.api.libs.json.Reads._
+import play.api.libs.json.Writes._
+import play.api.data.validation.ValidationError
+
+import play.api.libs.functional.syntax._
+
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 //import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-/**
- *
- * @author alykoff
- *         07.02.2015
- */
 object UserController extends Controller {
-  def create = Action.async { request =>
-    val res = Future {
-      Ok("hello").as("application/json")
-    }
-    res.recoverWith {
-      case e: RuntimeException =>
-        Future(InternalServerError("error"))
-    }
-    Future.successful(Ok("hello"))
-    val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", 1.second)
+  implicit val userReads: Reads[ThinUser] = (
+    (__ \ "email").read[String](email keepAnd minLength[String](5)) and
+    (__ \ "name").read[String](minLength[String](2)) and
+    (__ \ "password").read[String](minLength[String](2))
+  )(ThinUser.apply _)
 
-//    Promise.timeout(Ok("hello"), 5.second)
-    // timeout
-    Future.firstCompletedOf(Seq(res, timeoutFuture)).map {
-      case i: Result => Ok("Got result: " + i)
-      case t: String => InternalServerError(t)
-    }
+//  implicit val userWrites: Writes[User] = (
+//    (__ \ "id").write[Long] and
+//    (__ \ "email").write[String] and
+//    (__ \ "name").write[String] and
+//    (__ \ "password").write[String]
+//  )(unlift(User.unapply))
+
+  def create = Action(BodyParsers.parse.json) { implicit request =>
+    val userResult = request.body.validate[ThinUser]
+    userResult.fold (
+      errors => {
+        BadRequest(Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors)))
+      },
+      thinUser => {
+        val user = Users.create(thinUser.email, thinUser.name, thinUser.password)
+        user match {
+          case None => BadRequest(Json.obj("status" -> "err", "message" -> "Don't create or save."))
+          case _ => Ok(Json.obj("status" -> "ok", "message" -> ("User '" + thinUser.name + "' saved.")))
+        }
+      }
+    )
+//    val res = Future {
+//      Ok("hello").as("application/json")
+//    }
+//    res.recoverWith {
+//      case e: RuntimeException =>
+//        Future(InternalServerError("error"))
+//    }
+//    Future.successful(Ok("hello"))
+//    val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", 1.second)
+//
+////    Promise.timeout(Ok("hello"), 5.second)
+//    // timeout
+//    Future.firstCompletedOf(Seq(res, timeoutFuture)).map {
+//      case i: Result => Ok("Got result: " + i)
+//      case t: String => InternalServerError(t)
+//    }
   }
 
   def get(id: Long) = Action.async {

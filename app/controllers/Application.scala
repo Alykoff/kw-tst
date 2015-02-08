@@ -21,7 +21,7 @@ object Application extends Controller {
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
         //        request.flash("error")
-        Redirect(routes.Application.catalog).withSession("uuid" -> randomUUID().toString)
+        Redirect(routes.OrderController.order).withSession("uuid" -> randomUUID().toString)
       }
     )
   }

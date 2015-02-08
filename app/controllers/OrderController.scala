@@ -20,4 +20,12 @@ object OrderController extends Controller {
     Ok("")
   }
 
+  def order = Action {implicit request =>
+    Ok(views.html.order())
+  }
+
+  def o(id: Long, ud: Long) = Action {
+    Ok("")
+  }
+
 }
