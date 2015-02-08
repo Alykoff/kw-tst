@@ -1,11 +1,8 @@
 package controllers
 
-import models.{Users, User}
-import play.Play
-import play.api.data._
-import play.api.data.Forms._
 import play.api.mvc._
 import views.util.formdata.{SignUpData, LoginData}
+import java.util.UUID.randomUUID
 
 object Application extends Controller {
 
@@ -24,7 +21,7 @@ object Application extends Controller {
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
         //        request.flash("error")
-        Redirect(routes.Application.index)
+        Redirect(routes.Application.catalog).withSession("uuid" -> randomUUID().toString)
       }
     )
   }
