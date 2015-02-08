@@ -21,7 +21,8 @@ object LoginData {
     )(LoginData.apply)(LoginData.unapply)
     verifying("Invalid user name or password", { fields => fields match {
       case LoginData(eMail, password) =>
-        Users.getByEmail(eMail).filter(_.password == password).isDefined
+        val user = Users.getByEmail(eMail).filter(_.password == password)
+        user.isDefined
     }})
   )
 }

@@ -21,7 +21,9 @@ object SignUpData {
       PASSWORD_FIELD_NAME -> nonEmptyText(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
     )(SignUpData.apply)(SignUpData.unapply)
     verifying("Current user is already signed up!", { fields => fields match {
-      case SignUpData(_, eMail, _) => Users.getByEmail(eMail).isDefined
+      case SignUpData(_, eMail, _) =>
+        val user = Users.getByEmail(eMail)
+        !user.isDefined
     }})
   )
 }

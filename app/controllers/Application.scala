@@ -1,5 +1,6 @@
 package controllers
 
+import models.Users
 import play.api.mvc._
 import views.util.formdata.{SignUpData, LoginData}
 import java.util.UUID.randomUUID
@@ -32,6 +33,7 @@ object Application extends Controller {
         BadRequest(views.html.index(LoginData.loginForm, formWithErrors))
       },
       userData => {
+        Users.create(userData.username, userData.email, userData.password)
         /* binding success, you get the actual value. */
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
