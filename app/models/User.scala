@@ -20,21 +20,19 @@ object Users {
   def create(name: String, email: String, password: String): Option[User] = {
     val nextId = Option(users).map(_.last.id + 1L).getOrElse(firstId)
     val user = User(nextId, name, email, password)
-    users = user :: users
+    save(user)
     Some(user)
   }
 
   def get(email: String, password: String): Option[User] = {
-    val filteredUsers = users.filter(user => user.email == email && user.password == password)
-    if (filteredUsers.nonEmpty) Some(filteredUsers.head)
-    else None
+    users.find(user => user.email == email && user.password == password)
   }
 
   def getByEmail(email: String): Option[User] = {
-    val filteredUsers = users.filter(_.email == email)
-    Logger.info(filteredUsers.toString)
-    if (filteredUsers.nonEmpty) Some(filteredUsers.head)
-    else None
+    users.find(_.email == email)
   }
+
+  def save(user: User) =
+    users = user :: users
 
 }
