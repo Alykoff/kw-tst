@@ -1,0 +1,49 @@
+@(signinForm: Form[views.util.formdata.LoginData])
+
+@import util.form.signin_fields
+@import util.form.signup_form
+@import helper._
+
+@main(title="Home page") {
+<div class="container theme-showcase">
+    <div class="jumbotron">
+        Покупайте. Будьте свободны в своем выборе
+    </div>
+    <div class="row">
+        <div class="col-xs-5">
+            <div>
+                <h2>Sign in</h2>
+            </div>
+            @form(routes.Application.signin(), 'id -> "signin") {
+                @signin_fields(signinForm)
+            }
+
+            @*********************
+            @if(flash.containsKey("success")) {
+                <div class="well">
+                    <div id="success-message" class="text-success">
+                        @flash.get("success")
+                    </div>
+                </div>
+            }
+            @if(flash.containsKey("error")) {
+                <div class="well">
+                    <div id="error-message" class="text-danger">
+                        @flash.get("error")
+                    </div>
+                </div>
+            }
+            ***@
+        </div>
+        <div class="col-xs-2">
+            <h1>OR</h1>
+        </div>
+        <div class="col-xs-5">
+            <div>
+                <h2>Sign up</h2>
+            </div>
+            @signup_form()
+        </div>
+    </div>
+</div>
+}
