@@ -1,15 +1,11 @@
 package controllers
 
 import play.api.mvc.{Action, Controller}
+import controllers.SecureController.Authenticated
 
-/**
- *
- * @author alykoff
- *         07.02.2015
- */
 object OrderController extends Controller {
-  def create() = Action {
-    Ok("")
+  def create() = Authenticated { implicit request =>
+    Ok(request.user.email)
   }
 
   def edit(id: Long) = Action {

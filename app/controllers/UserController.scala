@@ -31,15 +31,13 @@ object UserController extends Controller {
 //  )(unlift(User.unapply))
 
   val msgErrSaveUser = Json.obj("status" -> "err", "message" -> "Don't create or save.")
-  def msgErrParseUser(errors: Seq[(JsPath, Seq[ValidationError])]) = Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors))
+  def msgErrParse(errors: Seq[(JsPath, Seq[ValidationError])]) = Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors))
   def msgSuccessSavedUser(name: String) = Json.obj("status" -> "ok", "message" -> ("User '" + name + "' saved."))
   
   def create = Action(BodyParsers.parse.json) { implicit request =>
     val userResult = request.body.validate[ThinUser]
     userResult.fold (
-      errors => {
-        BadRequest(msgErrParseUser(errors))
-      },
+      errors => BadRequest(msgErrParse(errors)),
       thinUser => {
         val user = Users.create(thinUser.email, thinUser.name, thinUser.password)
         user match {

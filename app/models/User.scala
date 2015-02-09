@@ -32,6 +32,9 @@ object Users {
     users.find(_.email == email)
   }
 
+  def getById(idUser: Long): Option[User] =
+    users.find(_.id == idUser)
+
   def save(user: User) =
     users = user :: users
 

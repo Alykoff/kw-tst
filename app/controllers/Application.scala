@@ -6,7 +6,7 @@ import views.util.formdata.{SignUpData, LoginData}
 import java.util.UUID.randomUUID
 
 object Application extends Controller {
-
+  val SESSION_KEY = "uuid"
 
   def index = Action {
     Ok(views.html.index(LoginData.loginForm, SignUpData.loginForm))
@@ -22,7 +22,7 @@ object Application extends Controller {
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
         //        request.flash("error")
-        Redirect(routes.OrderController.order).withSession("uuid" -> randomUUID().toString)
+        Redirect(routes.OrderController.order).withSession(SESSION_KEY -> randomUUID().toString)
       }
     )
   }
