@@ -3,7 +3,9 @@ package controllers
 import models.Users
 import play.api.mvc._
 import views.util.formdata.{SignUpData, LoginData}
-import java.util.UUID.randomUUID
+import java.util.UUID._
+import play.api.cache.Cache
+import play.api.Play.current
 
 object Application extends Controller {
   val SESSION_KEY = "uuid"
@@ -22,7 +24,10 @@ object Application extends Controller {
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
         //        request.flash("error")
-        Redirect(routes.OrderController.order).withSession(SESSION_KEY -> randomUUID().toString)
+        val uuid = randomUUID().toString
+        val userId = Users.getByEmail(userData.email).map(_.id)
+        if (userId.isDefined) Cache.set(uuid, userId)
+        Redirect(routes.OrderController.order).withSession(SESSION_KEY -> uuid)
       }
     )
   }
