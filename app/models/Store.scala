@@ -1,5 +1,7 @@
 package models
 
+import scala.util.{Success, Try}
+
 case class Position(idProduct: Long, numberOfProducts: Long)
 case class ProductType(idProduct: Long, name: String, cost: Double)
 case class Store(position: Seq[Position])
@@ -7,7 +9,7 @@ case class Order(idOrder: Long, idUser: Long, items: Seq[Position])
 
 object Store {
   var store = Position(1, 12) :: Position(2, 22) :: List()
-  def get(from: Long, to: Long) = store
+  def get(from: Long, to: Long) = Success(store)
 }
 
 object Order {

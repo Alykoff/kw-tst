@@ -23,12 +23,11 @@ object UserController extends Controller {
     (__ \ "password").read[String](minLength[String](2))
   )(ThinUser.apply _)
 
-//  implicit val userWrites: Writes[User] = (
+//  implicit val userWrites: Writes[ThinUser] = (
 //    (__ \ "id").write[Long] and
 //    (__ \ "email").write[String] and
-//    (__ \ "name").write[String] and
-//    (__ \ "password").write[String]
-//  )(unlift(User.unapply))
+//    (__ \ "name").write[String]
+//  )(unlift(ThinUser.unapply))
 
   val msgErrSaveUser = Json.obj("status" -> "err", "message" -> "Don't create or save.")
   def msgErrParse(errors: Seq[(JsPath, Seq[ValidationError])]) = Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors))

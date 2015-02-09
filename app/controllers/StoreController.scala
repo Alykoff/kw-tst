@@ -42,7 +42,7 @@ object StoreController extends Controller {
   def get(page: Long) = Action{ implicit request =>
     val store = Store.get(page * itemsInPage, page * (itemsInPage + 1))
     store match {
-      case Success(Some(value)) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(value).toString))
+      case Success(value) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(value).toString))
       case _ => BadRequest(Json.obj("status" -> "err", "message" -> "bad data."))
     }
   }
