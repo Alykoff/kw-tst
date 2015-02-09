@@ -37,12 +37,9 @@ object UserController extends Controller {
     val userResult = request.body.validate[ThinUser]
     userResult.fold (
       errors => BadRequest(msgErrParse(errors)),
-      thinUser => {
-        val user = Users.create(thinUser.email, thinUser.name, thinUser.password)
-        user match {
-          case None => BadRequest(msgErrSaveUser)
-          case _ => Ok(msgSuccessSavedUser(thinUser.name))
-        }
+      thinUser => Users.create(thinUser) match {
+        case None => BadRequest(msgErrSaveUser)
+        case _ => Ok(msgSuccessSavedUser(thinUser.name))
       }
     )
 //    val res = Future {

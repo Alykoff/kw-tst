@@ -1,8 +1,8 @@
 package models
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
-case class Position(idProduct: Long, numberOfProducts: Long)
+case class Position(idProduct: Long, count: Long)
 case class ProductType(idProduct: Long, name: String, cost: Double)
 case class Store(position: Seq[Position])
 case class Order(idOrder: Long, idUser: Long, items: Seq[Position])

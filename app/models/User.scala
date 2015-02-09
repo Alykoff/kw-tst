@@ -24,6 +24,10 @@ object Users {
     Some(user)
   }
 
+  def create(thinUser: ThinUser): Option[User] = {
+    create(thinUser.name, thinUser.email, thinUser.password)
+  }
+
   def get(email: String, password: String): Option[User] = {
     users.find(user => user.email == email && user.password == password)
   }

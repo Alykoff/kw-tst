@@ -20,8 +20,9 @@ POST    /user                       controllers.UserController.create
 
 # склад
 GET     /store/:page                controllers.StoreController.get(page: Long)
+POST    /store                      controllers.StoreController.get
 
 # заказ
-POST    /order                      controllers.OrderController.create
+POST    /order/create               controllers.OrderController.create
 POST    /order/:id                  controllers.OrderController.edit(id: Long)
 GET     /order/:id                  controllers.OrderController.get(id: Long)

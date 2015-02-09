@@ -1,6 +1,6 @@
 package controllers
 
-import models.{Position, ProductType, Order}
+import models.{Store, Position, ProductType, Order}
 import play.api.libs.json._
 import play.api.mvc.{Action, Controller}
 import controllers.SecureController.Authenticated
@@ -24,8 +24,6 @@ object OrderController extends Controller {
     (__ \ "count").write[Long]
   )(unlift(Position.unapply))
 
-  implicit val positionSeqWrites: Writes[Seq[Position]] = (__ \ "positions").lazyWrite(Writes.seq[Position](positionWrites))
-
   implicit val orderReads: Reads[Order] = (
     (__ \ "id_order").read[Long] ~
     (__ \ "id_user").read[Long] ~
@@ -37,6 +35,7 @@ object OrderController extends Controller {
     (__ \ "id_user").write[Long] ~
     (__ \ "positions").lazyWrite(Writes.seq[Position](positionWrites))
   ) (unlift(Order.unapply))
+
 
 //  implicit val orderReads: Reads[ProductType] = (
 //    (__ \ "id_item").read[Long]
