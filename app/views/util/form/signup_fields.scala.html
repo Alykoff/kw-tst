@@ -1,0 +1,32 @@
+@(signupForm: Form[views.util.formdata.SignUpData])
+
+@import util.elements.text
+@import util.elements.password
+@import views.util.formdata.SignUpData
+
+<div class="form-group">
+    @text(signupForm(SignUpData.USERNAME_FIELD_NAME),
+        label = "Username",
+        placeholder = "Username")
+</div>
+<div class="form-group">
+    @text(signupForm(SignUpData.EMAIL_FIELD_NAME),
+        label = "Email address",
+        placeholder = "Enter email")
+</div>
+<div class="form-group">
+    @password(signupForm(SignUpData.PASSWORD_FIELD_NAME),
+        label = "Password",
+        placeholder = "Password")
+</div>
+
+@if(signupForm.hasGlobalErrors) {
+    <div>
+        <ul>
+            @for(error <- signupForm.globalErrors) {
+                <li>@error.message</li>
+            }
+        </ul>
+    </div>
+}
+<button type="submit" class="btn btn-default">Submit</button>

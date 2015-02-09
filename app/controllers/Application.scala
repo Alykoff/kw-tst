@@ -6,12 +6,19 @@ import views.util.formdata.{SignUpData, LoginData}
 import java.util.UUID._
 import play.api.cache.Cache
 import play.api.Play.current
+import scala.util.Try
 
 object Application extends Controller {
   val SESSION_KEY = "uuid"
 
   def index = Action {
     Ok(views.html.index(LoginData.loginForm, SignUpData.loginForm))
+  }
+
+  def logout = Action { implicit request =>
+    val uuid = request.session.get(SESSION_KEY)
+    Try(Cache.remove(uuid.get))
+    Redirect(routes.Application.index).withNewSession
   }
 
   def signin = Action { implicit request =>
