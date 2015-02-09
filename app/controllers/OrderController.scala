@@ -7,12 +7,14 @@ import controllers.SecureController.Authenticated
 
 object OrderController extends Controller {
 
-
   implicit val orderItemReads: Reads[ProductType] = (
-    (__ \ "id_product").read[Long] and
-      (__ \ "name").read[String] and
-      (__ \ "cost").read[Double]
-    )(ProductType.apply _)
+    (__ \ "id_item").read[Long] and
+    (__ \ "count").read[Long] and
+  )(ProductType.apply _)
+
+//  implicit val orderReads: Reads[ProductType] = (
+//    (__ \ "id_item").read[Long]
+//  )(ProductType.apply _)
 
   def create() = Authenticated { implicit request =>
 

@@ -31,12 +31,12 @@ object StoreController extends Controller {
     (__ \ "cost").write[Double]
   )(unlift(ProductType.unapply))
 
-  implicit val storeItemWriters: Writes[ProductPosition] = (
+  implicit val storeItemWriters: Writes[Position] = (
     (__ \ "id_product").write[Long] and
     (__ \ "counts").write[Long]
-  )(unlift(ProductPosition.unapply))
+  )(unlift(Position.unapply))
 
-  implicit val storeWriters: Writes[Store] = (__ \ "store_items").lazyWrite(Writes.seq[ProductPosition](storeItemWriters)).contramap(unlift(Store.unapply))
+  implicit val storeWriters: Writes[Store] = (__ \ "store_items").lazyWrite(Writes.seq[Position](storeItemWriters)).contramap(unlift(Store.unapply))
 //  .lazyWrite(Writes.traversableWrites[Creature](creatureWrites))
 
   def get(page: Long) = Action{ implicit request =>
