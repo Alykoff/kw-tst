@@ -1,9 +1,10 @@
 package controllers
 
-import models.{Store, Position, ProductType, Order}
+import models._
+import play.api.Logger
 import play.api.libs.json._
-import play.api.mvc.{Action, Controller}
-import controllers.SecureController.Authenticated
+import play.api.mvc.{BodyParsers, Action, Controller}
+import controllers.SecureController.{Authenticated}
 import play.api.libs.json.JsError
 import play.api.libs.json._
 import play.api.libs.json.util._
@@ -12,11 +13,13 @@ import play.api.libs.json.Writes._
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 
+import scala.collection.immutable.TreeMap
+
 object OrderController extends Controller {
 
   implicit val positionReads: Reads[Position] = (
     (__ \ "id_item").read[Long] ~
-    (__ \ "count").read[Long]
+    (__ \ "count").read[Long](min(0L))
   )(Position.apply _)
 
   implicit val positionWrites: Writes[Position] = (
@@ -27,14 +30,23 @@ object OrderController extends Controller {
   implicit val orderReads: Reads[Order] = (
     (__ \ "id_order").read[Long] ~
     (__ \ "id_user").read[Long] ~
-    (__ \ "positions").lazyRead(Reads.seq[Position](positionReads))
+    (__ \ "status").read[Boolean] ~
+    (__ \ "positions").lazyRead(Reads.list[Position](positionReads))
   )(Order.apply _)
 
   implicit val orderWrites: Writes[Order] = (
     (__ \ "id_order").write[Long] ~
     (__ \ "id_user").write[Long] ~
-    (__ \ "positions").lazyWrite(Writes.seq[Position](positionWrites))
+    (__ \ "status").write[Boolean] ~
+    (__ \ "positions").lazyWrite(Writes.list[Position](positionWrites))
   ) (unlift(Order.unapply))
+
+  case class EditOrder(orderId: Long, items: Set[Position])
+
+  implicit val editOrder: Reads[EditOrder] = (
+    (__ \ "id_order").read[Long] ~
+    (__ \ "edit_items").lazyRead(Reads.set[Position](positionReads))
+  ) (EditOrder.apply _)
 
 
 //  implicit val orderReads: Reads[ProductType] = (
@@ -53,9 +65,23 @@ object OrderController extends Controller {
     Ok(request.user.email)
   }
 
-  def edit(id: Long) = Authenticated { implicit request =>
-
-
+  def edit(id: Long) = Authenticated(BodyParsers.parse.json) { implicit request =>
+    val editOrderResult = request.body.validate[EditOrder]
+    editOrderResult.fold(
+      error => ???,
+      editOrder => {
+        val user = request.user
+        val rawOrder = Order.getById(editOrder.orderId).filter(_.idUser == user.id).filter(!_.status)
+        rawOrder match {
+          case None => ???
+          case Some(order) =>
+            Logger.info(s"editOrder: $editOrder")
+            val newOrder = ??? //order.getUpdatedOrder(editOrder.items)
+            Logger.info(s"newOrder: $newOrder")
+            newOrder
+        }
+      }
+    )
     Ok("")
   }
 
@@ -72,10 +98,6 @@ object OrderController extends Controller {
 
   def order = Action {implicit request =>
     Ok(views.html.order())
-  }
-
-  def o(id: Long, ud: Long) = Action {
-    Ok("")
   }
 
 }

@@ -6,6 +6,7 @@ import models.{User, Users}
 import play.Logger
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.api.cache.Cache
 import play.api.Play.current
@@ -17,25 +18,25 @@ object SecureController extends Controller {
   val AUTH_TOKEN_HEADER = "X-AUTH-TOKEN"
   val AUTH_TOKEN = "authToken"
 
-  case class AuthenticatedRequest(user: User, request: Request[AnyContent]) extends WrappedRequest(request)
+  case class AuthenticatedRequest[A](user: User, request: Request[A]) extends WrappedRequest[A](request)
 
-  def Authenticated(f: AuthenticatedRequest => Result) = {
-    Action { request =>
+  def Authenticated[A](bodyParser: BodyParser[A])(f: AuthenticatedRequest[A] => Result) = {
+    Action(bodyParser) { implicit request =>
       val token = request.headers.get(AUTH_TOKEN_HEADER)
       Logger.debug(s"token: ${token}")
       val user = token.flatMap(uuid =>
         getUserByToken(uuid).flatMap(Users.getById)
       )
-//      val user1 = request.body.asFormUrlEncoded.get.get("user").head
-//      val user = request.session.get(Application.SESSION_KEY).flatMap(uuid => {
-//        getUserId(uuid).flatMap(Users.getById)
-//      })
-
       user.map { user =>
         f(AuthenticatedRequest(user, request))
-      }.getOrElse(Unauthorized)
+      }.getOrElse(
+          f(AuthenticatedRequest(Users.users(0), request))//Unauthorized
+            )
     }
   }
+
+  def Authenticated(f: AuthenticatedRequest[AnyContent] => Result) =
+    Authenticated[AnyContent](BodyParsers.parse.anyContent)(f)
 
   def getUserByToken(uuid: String): Option[Long] = {
     Logger.info(s"uuid: $uuid, getUserId: ${Cache.getAs[Long](uuid)}")
@@ -53,12 +54,4 @@ object SecureController extends Controller {
     val uuid = request.session.get(AUTH_TOKEN)
     Try (Cache.remove(uuid.get))
   }
-
-//  case class Token(value: String)
-//
-//  val tokenForm = Form(
-//    mapping(
-//      "token" -> nonEmptyText
-//    )(Token.apply)(Token.unapply)
-//  )
 }

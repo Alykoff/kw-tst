@@ -39,9 +39,7 @@ object StoreController extends Controller {
   )(unlift(Position.unapply))
 
   implicit val storeWriters: Writes[Store] =
-    (__ \ "positions").lazyWrite(Writes.seq[Position](storeItemWriters)).contramap(unlift(Store.unapply))
-
-//  .lazyWrite(Writes.traversableWrites[Creature](creatureWrites))
+    (__ \ "positions").lazyWrite(Writes.set[Position](storeItemWriters)).contramap(unlift(Store.unapply))
 
   def getByPage(page: Long) = Action{ implicit request =>
     val store = Store.get(page * itemsInPage, page * (itemsInPage + 1))
@@ -52,11 +50,6 @@ object StoreController extends Controller {
   }
 
   def get = Action { implicit request =>
-//    val storeFromJson = request.body.validate[Store]
-//    storeFromJson.fold(
-//      error => BadRequest,
-//      store => Ok("")
-//    )
     Store.getAll match {
       case Some(store) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(store)))
       case None => BadRequest(UserController.msgErr("bad data."))
