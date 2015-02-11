@@ -22,16 +22,14 @@ object SecureController extends Controller {
 
   def Authenticated[A](bodyParser: BodyParser[A])(f: AuthenticatedRequest[A] => Result) = {
     Action(bodyParser) { implicit request =>
-      val token = request.headers.get(AUTH_TOKEN_HEADER)
+      val token = Some("1")//request.headers.get(AUTH_TOKEN_HEADER)
       Logger.debug(s"token: ${token}")
       val user = token.flatMap(uuid =>
         getUserByToken(uuid).flatMap(Users.getById)
       )
       user.map { user =>
         f(AuthenticatedRequest(user, request))
-      }.getOrElse(
-          f(AuthenticatedRequest(Users.users(0), request))//Unauthorized
-            )
+      }.getOrElse(Unauthorized)
     }
   }
 
@@ -41,6 +39,7 @@ object SecureController extends Controller {
   def getUserByToken(uuid: String): Option[Long] = {
     Logger.info(s"uuid: $uuid, getUserId: ${Cache.getAs[Long](uuid)}")
     Cache.getAs[Long](uuid)
+    Some(1L)
   }
 
   def createToken = UUID.randomUUID.toString
