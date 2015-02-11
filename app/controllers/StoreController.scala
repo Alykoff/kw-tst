@@ -40,21 +40,26 @@ object StoreController extends Controller {
 
   implicit val storeWriters: Writes[Store] =
     (__ \ "positions").lazyWrite(Writes.seq[Position](storeItemWriters)).contramap(unlift(Store.unapply))
+
 //  .lazyWrite(Writes.traversableWrites[Creature](creatureWrites))
 
-  def get(page: Long) = Action{ implicit request =>
+  def getByPage(page: Long) = Action{ implicit request =>
     val store = Store.get(page * itemsInPage, page * (itemsInPage + 1))
     store match {
-      case Success(value) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(value).toString))
+      case Success(value) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(value)))
       case _ => BadRequest(Json.obj("status" -> "err", "message" -> "bad data."))
     }
   }
 
-  def get = Action(BodyParsers.parse.json) { implicit request =>
-    val storeFromJson = request.body.validate[Store]
-    storeFromJson.fold(
-      error => BadRequest,
-      store => Ok("")
-    )
+  def get = Action { implicit request =>
+//    val storeFromJson = request.body.validate[Store]
+//    storeFromJson.fold(
+//      error => BadRequest,
+//      store => Ok("")
+//    )
+    Store.getAll match {
+      case Some(store) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(store)))
+      case None => BadRequest(UserController.msgErr("bad data."))
+    }
   }
 }

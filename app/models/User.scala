@@ -9,7 +9,7 @@ object Users {
   val firstId = 0L
 
   var users = User(0L, "al", "al@me.ru", "111") ::
-    User(1L, "b", "b@me.ru", "111") ::
+    User(1L, "b", "b@bb.bb", "111") ::
     User(2L, "c", "c@me.ru", "111") ::
     User(3L, "d", "d@me.ru", "111") ::
     User(4L, "e", "e@me.ru", "111") :: List()
@@ -36,8 +36,10 @@ object Users {
     users.find(_.email == email)
   }
 
-  def getById(idUser: Long): Option[User] =
+  def getById(idUser: Long): Option[User] = {
+    Logger.info(s"userId: ${idUser}")
     users.find(_.id == idUser)
+  }
 
   def save(user: User) =
     users = user :: users

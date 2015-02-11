@@ -8,8 +8,9 @@ case class Store(position: Seq[Position])
 case class Order(idOrder: Long, idUser: Long, items: Seq[Position])
 
 object Store {
-  var store = Position(1, 12) :: Position(2, 22) :: List()
+  var store = Store(Position(1, 12) :: Position(2, 22) :: List())
   def get(from: Long, to: Long) = Success(store)
+  def getAll: Option[Store] = Some(store)
 }
 
 object Order {

@@ -18,8 +18,8 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 object UserController extends Controller {
   implicit val userReads: Reads[ThinUser] = (
-    (__ \ "email").read[String](email keepAnd minLength[String](5)) and
-    (__ \ "name").read[String](minLength[String](2)) and
+    (__ \ "email").read[String](email keepAnd minLength[String](5)) ~
+    (__ \ "name").read[String](minLength[String](2)) ~
     (__ \ "password").read[String](minLength[String](2))
   )(ThinUser.apply _)
 
@@ -31,6 +31,7 @@ object UserController extends Controller {
 
   val msgErrSaveUser = Json.obj("status" -> "err", "message" -> "Don't create or save.")
   def msgErrParse(errors: Seq[(JsPath, Seq[ValidationError])]) = Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors))
+  def msgErr(errorMsg: String) = Json.obj("status" -> "err", "message" -> errorMsg)
   def msgSuccessSavedUser(name: String) = Json.obj("status" -> "ok", "message" -> ("User '" + name + "' saved."))
   
   def create = Action(BodyParsers.parse.json) { implicit request =>

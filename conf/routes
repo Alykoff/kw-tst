@@ -19,7 +19,7 @@ GET     /user/:id                   controllers.UserController.get(id: Long)
 POST    /user                       controllers.UserController.create
 
 # склад
-GET     /store/:page                controllers.StoreController.get(page: Long)
+GET     /store/:page                controllers.StoreController.getByPage(page: Long)
 POST    /store                      controllers.StoreController.get
 
 # заказ

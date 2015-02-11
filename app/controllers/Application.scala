@@ -1,23 +1,19 @@
 package controllers
 
 import models.Users
+import play.api.Logger
 import play.api.mvc._
 import views.util.formdata.{SignUpData, LoginData}
-import java.util.UUID._
-import play.api.cache.Cache
 import play.api.Play.current
-import scala.util.Try
+import controllers.SecureController.{createToken, createSecuritySession, delSecuritySession, AUTH_TOKEN}
 
 object Application extends Controller {
-  val SESSION_KEY = "uuid"
-
   def index = Action {
     Ok(views.html.index(LoginData.loginForm, SignUpData.loginForm))
   }
 
   def logout = Action { implicit request =>
-    val uuid = request.session.get(SESSION_KEY)
-    Try(Cache.remove(uuid.get))
+    delSecuritySession
     Redirect(routes.Application.index).withNewSession
   }
 
@@ -26,15 +22,14 @@ object Application extends Controller {
       formWithErrors => {
         BadRequest(views.html.index(formWithErrors, SignUpData.loginForm))
       },
-      userData => {
+      loginData => {
         /* binding success, you get the actual value. */
         //        val newUser = models.User(userData.name, userData.age)
         //        val id = models.User.create(newUser)
         //        request.flash("error")
-        val uuid = randomUUID().toString
-        val userId = Users.getByEmail(userData.email).map(_.id)
-        if (userId.isDefined) Cache.set(uuid, userId)
-        Redirect(routes.OrderController.order).withSession(SESSION_KEY -> uuid)
+        val token = createToken
+        createSecuritySession(token, loginData)
+        Redirect(routes.OrderController.order).withSession(AUTH_TOKEN -> token)
       }
     )
   }
@@ -54,4 +49,5 @@ object Application extends Controller {
       }
     )
   }
+
 }

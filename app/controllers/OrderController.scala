@@ -53,12 +53,21 @@ object OrderController extends Controller {
     Ok(request.user.email)
   }
 
-  def edit(id: Long) = Action {
+  def edit(id: Long) = Authenticated { implicit request =>
+
+
     Ok("")
   }
 
-  def get(id: Long) = Action {
-    Ok("")
+  def get(id: Long) = Authenticated { implicit request =>
+    Order.getById(id) match {
+      case Some(order) if order.idUser == request.user.id =>
+        Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(order)))
+      case Some(order) =>
+        BadRequest(UserController.msgErr("Permission error"))
+      case _ =>
+        BadRequest(UserController.msgErr("Not found order"))
+    }
   }
 
   def order = Action {implicit request =>
