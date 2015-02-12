@@ -7,7 +7,7 @@ GET     /                           controllers.Application.index
 GET     /logout                     controllers.Application.logout
 POST    /signin                     controllers.Application.signin
 POST    /signup                     controllers.Application.signup
-GET     /catalog                    controllers.OrderController.order
+#GET     /catalog                    controllers.OrderController.order
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file)
@@ -26,3 +26,4 @@ POST    /store                      controllers.StoreController.get
 POST    /order                      controllers.OrderController.create
 POST    /order/:id                  controllers.OrderController.edit(id: Long)
 GET     /order/:id                  controllers.OrderController.get(id: Long)
+POST    /order/check/:id            controllers.OrderController.check(id: Long)
