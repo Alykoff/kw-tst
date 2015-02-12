@@ -22,7 +22,16 @@ object SecureController extends Controller {
   case class AuthenticatedRequest[A](user: User, request: Request[A]) extends WrappedRequest[A](request)
 
   def Authenticated[A](bodyParser: BodyParser[A])(f: AuthenticatedRequest[A] => Future[Result]) = {
+
     Action.async(bodyParser) { implicit request =>
+      def unwrapResult(opUser: Future[Option[User]]): Future[Result] = {
+        opUser flatMap { case user =>
+          user match {
+            case Some(us) => f(AuthenticatedRequest(us, request))
+            case _ => Future(Unauthorized)
+          }
+        }
+      }
       Future {
         val token = Some("1") //request.headers.get(AUTH_TOKEN_HEADER)
         Logger.debug(s"token: ${token}")
@@ -30,28 +39,8 @@ object SecureController extends Controller {
           case None => Future.successful(Option.empty[User])
           case Some(x) => x
         }
-        //        match {
-        //          case Some(x) =>(x) match {
-        //            case Success(y) =>
-        //          }
-        //          case _ => Future.successful(Option.empty[User])
-        //        }}
-
-//        val resp = user onComplete {
-//          case Failure(_) => Unauthorized
-//          case Success(optionUser) => optionUser match {
-//            case Some(u) => f(AuthenticatedRequest(u, request))
-//            case _ => Unauthorized
-//          }
-//        }
-
-//
         user
-      }.flatMap { u =>
-        u map {
-          f(AuthenticatedRequest(user, request))
-        }.getOrElse(Unauthorized)
-      }
+      }.flatMap(unwrapResult)
     }
   }
 
