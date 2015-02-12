@@ -1,11 +1,37 @@
 package models
 
 import play.api.Logger
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
-case class User(id: Long, name: String, email: String, password: String)
+import scala.concurrent.Future
+import play.api.Play.current
+import org.reactivecouchbase.Couchbase
+import org.reactivecouchbase.CouchbaseBucket
+import org.reactivecouchbase.client.OpResult
+import org.reactivecouchbase.ReactiveCouchbaseDriver
+import org.reactivecouchbase.play._
+
+import play.api.libs.json._
+import play.api.libs.json.util._
+import play.api.libs.json.Reads._
+import play.api.libs.json.Writes._
+import play.api.data.validation.ValidationError
+
+import play.api.libs.functional.syntax._
+
+case class User(id: Long, name: String, email: String, password: String) {
+//  def save(): Future[OpResult] = User.save(this)
+}
 case class ThinUser(name: String, email: String, password: String)
 
-object Users {
+object User {
+  // get a driver instance driver
+  implicit val personFormat = Json.format[User]
+  implicit val ec = PlayCouchbase.couchbaseExecutor
+
+  def bucket = PlayCouchbase.bucket("default")
+
   val firstId = 0L
 
   var users = User(0L, "al", "al@me.ru", "111") ::
@@ -36,12 +62,10 @@ object Users {
     users.find(_.email == email)
   }
 
-  def getById(idUser: Long): Option[User] = {
-    Logger.info(s"userId: ${idUser}")
-    users.find(_.id == idUser)
+  def getById(idUser: Long): Future[Option[User]] = {
+    bucket.get[User]("")
   }
 
-  def save(user: User) =
-    users = user :: users
+  def save(user: User) = users = user :: users
 
 }

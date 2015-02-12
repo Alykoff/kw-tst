@@ -1,6 +1,6 @@
 package views.util.formdata
 
-import models.Users
+import models.User
 import play.api.data.Form
 import play.api.data.Forms._
 
@@ -22,7 +22,7 @@ object SignUpData {
     )(SignUpData.apply)(SignUpData.unapply)
     verifying("Current user is already signed up!", { fields => fields match {
       case SignUpData(_, eMail, _) =>
-        val user = Users.getByEmail(eMail)
+        val user = User.getByEmail(eMail)
         !user.isDefined
     }})
   )

@@ -1,6 +1,6 @@
 package views.util.formdata
 
-import models.Users
+import models.User
 import play.Play
 import play.api.data.Form
 import play.api.data.Forms._
@@ -21,7 +21,7 @@ object LoginData {
     )(LoginData.apply)(LoginData.unapply)
     verifying("Invalid user name or password", { fields => fields match {
       case LoginData(eMail, password) =>
-        val user = Users.getByEmail(eMail).filter(_.password == password)
+        val user = User.getByEmail(eMail).filter(_.password == password)
         user.isDefined
     }})
   )
