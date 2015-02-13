@@ -25,7 +25,7 @@ object OrderController extends Controller {
 
   implicit val orderWrites: Writes[Order] = (
     (__ \ "id_order").write[Long] ~
-    (__ \ "id_user").write[Long] ~
+    (__ \ "id_user").write[String] ~
     (__ \ "status").write[Boolean] ~
     (__ \ "positions").lazyWrite(Writes.set[Position](positionWrites))
   ) (unlift(Order.unapply))

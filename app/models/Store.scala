@@ -14,7 +14,7 @@ case class Position(idProduct: Long, count: Long) extends Ordered[Position] {
 case class ProductType(idProduct: Long, name: String, cost: Double)
 case class Store(positions: TreeSet[Position])
 
-case class Order(idOrder: Long, idUser: Long, status: Boolean, positions: TreeSet[Position]) {
+case class Order(idOrder: Long, idUser: String, status: Boolean, positions: TreeSet[Position]) {
   val BIGGER = 1
   val SMALLER = -1
   val EAQUALS = 0
@@ -109,15 +109,15 @@ object Order {
   def nextId: Long = {
     Option(orders.max(Ordering[Long].on[Order](_.idOrder))).map(_.idOrder + 1).getOrElse(1)
   }
-  def create(items: Set[Position], userId: Long) = {
+  def create(items: Set[Position], userId: String) = {
     val order = Order(nextId, userId, false, items)
     orders = order :: orders
     Logger.info(order.toString)
     order
   }
 
-  var orders = Order(1, 1, false, TreeSet(Position(1, 4), Position(2, 4), Position(3, 4), Position(6, 4))) ::
-    Order(2, 1, false, TreeSet(Position(1, 4))) :: Order(3, 2, false, TreeSet(Position(1, 4))) :: List()
+  var orders = Order(1, "1", false, TreeSet(Position(1, 4), Position(2, 4), Position(3, 4), Position(6, 4))) ::
+    Order(2, "1", false, TreeSet(Position(1, 4))) :: Order(3, "2", false, TreeSet(Position(1, 4))) :: List()
 
   def getById(idOrder: Long) = {
     orders.find(_.idOrder == idOrder)

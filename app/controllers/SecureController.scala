@@ -11,6 +11,7 @@ import play.api.mvc._
 import play.api.cache.Cache
 import play.api.Play.current
 import views.util.formdata.LoginData
+import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -21,17 +22,20 @@ object SecureController extends Controller {
 
   case class AuthenticatedRequest[A](user: User, request: Request[A]) extends WrappedRequest[A](request)
 
-  def Authenticated[A](bodyParser: BodyParser[A])(f: AuthenticatedRequest[A] => Future[Result]) = {
-
+  def Authenticated[A](bodyParser: BodyParser[A])(f: AuthenticatedRequest[A] => Result) = {
     Action.async(bodyParser) { implicit request =>
       def unwrapResult(opUser: Future[Option[User]]): Future[Result] = {
-        opUser flatMap { case user =>
+        Logger.info("in wrap methods")
+        opUser map { case user =>
           user match {
-            case Some(us) => f(AuthenticatedRequest(us, request))
-            case _ => Future(Unauthorized)
+            case Some(us) => {
+              f(AuthenticatedRequest(us, request))
+            }
+            case _ => Unauthorized
           }
         }
       }
+//      unwrapResult(Future(Some(User(1L, "b", "b@bb.bb", "111"))))
       Future {
         val token = Some("1") //request.headers.get(AUTH_TOKEN_HEADER)
         Logger.debug(s"token: ${token}")
@@ -39,18 +43,19 @@ object SecureController extends Controller {
           case None => Future.successful(Option.empty[User])
           case Some(x) => x
         }
+        Logger.debug("in wrap methods")
         user
-      }.flatMap(unwrapResult)
+      } flatMap unwrapResult
     }
   }
 
-  def Authenticated(f: AuthenticatedRequest[AnyContent] => Future[Result]) =
+  def Authenticated(f: AuthenticatedRequest[AnyContent] => Result) =
     Authenticated[AnyContent](BodyParsers.parse.anyContent)(f)
 
-  def getUserByToken(uuid: String): Option[Long] = {
-    Logger.info(s"uuid: $uuid, getUserId: ${Cache.getAs[Long](uuid)}")
-    Cache.getAs[Long](uuid)
-    Some(1L)
+  def getUserByToken(uuid: String): Option[String] = {
+    Logger.info(s"uuid: $uuid, getUserId: ${Cache.getAs[String](uuid)}")
+    Cache.getAs[String](uuid)
+    Some("1")
   }
 
   def createToken = UUID.randomUUID.toString

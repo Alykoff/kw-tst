@@ -4,6 +4,11 @@ import models.User
 import play.api.data.Form
 import play.api.data.Forms._
 
+import scala.concurrent.duration._
+import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.concurrent.Await
+
 case class SignUpData(username: String, email: String, password: String)
 
 object SignUpData {
@@ -22,8 +27,8 @@ object SignUpData {
     )(SignUpData.apply)(SignUpData.unapply)
     verifying("Current user is already signed up!", { fields => fields match {
       case SignUpData(_, eMail, _) =>
-        val user = User.getByEmail(eMail)
-        !user.isDefined
+        val res = User.getByEmail(eMail) map {!_.isDefined} recover {case e: Throwable => false}
+        Await.result(res, 4 seconds)
     }})
   )
 }

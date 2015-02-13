@@ -4,6 +4,10 @@ import models.User
 import play.Play
 import play.api.data.Form
 import play.api.data.Forms._
+import scala.concurrent.duration._
+import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.concurrent.Await
 
 case class LoginData(email: String, password: String)
 
@@ -19,10 +23,14 @@ object LoginData {
       EMAIL_FIELD_NAME -> email,
       PASSWORD_FIELD_NAME -> nonEmptyText(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
     )(LoginData.apply)(LoginData.unapply)
-    verifying("Invalid user name or password", { fields => fields match {
+    verifying("Invalid user name or password", {fields => fields match {
       case LoginData(eMail, password) =>
-        val user = User.getByEmail(eMail).filter(_.password == password)
-        user.isDefined
+        val user = User.getByEmail(eMail)
+        val isAuth = user.map({
+          case Some(u) => u.password == password
+          case None => false
+        }) recover {case e: Throwable => false}
+        Await.result(isAuth, 2 second)
     }})
   )
 }

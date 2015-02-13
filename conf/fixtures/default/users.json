@@ -1,18 +1,18 @@
 [
   {
-    "_id": "1",
+    "id": "1",
     "name": "John Doe",
     "email": "john.doe@gmail.com",
     "password": "password"
   },
   {
-    "_id": "2",
+    "id": "2",
     "name": "Jane Doe",
     "email": "jane.doe@gmail.com",
     "password": "password"
   },
   {
-    "_id": "3",
+    "id": "3",
     "name": "Mike Black",
     "email": "bb@bb.bb",
     "password": "111"
