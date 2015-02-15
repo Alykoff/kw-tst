@@ -2,7 +2,7 @@
   "name":"orders",
   "views":{
     "by_user": {
-      "map": "function (doc, meta) { if (doc.name) { emit(doc.id_user, null); } }"
+      "map": "function (doc, meta) { if (doc.name) { emit(doc.idUser, null); } }"
     },
     "by_email": {
       "map": "function (doc, meta) { if (doc.email) { emit(doc.email, null); } }"

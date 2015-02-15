@@ -44,7 +44,7 @@ object User {
   def create(name: String, email: String, password: String): Future[Option[User]] = {
     val uuid = createUserId
     val user = User(uuid, name, email, password)
-    bucket.set[User](uuid, user).map {case x =>
+    bucket.set[User](uuid, user).map {case x => //TODO
       if (x.isSuccess) Some(user)
       else Option.empty[User]
     }
@@ -61,11 +61,11 @@ object User {
         .setRangeStart(ComplexKey.of(email))
         .setRangeEnd(ComplexKey.of(s"$email\uefff"))
         .setLimit(1)
-    bucket.find[User]("dev_users", "by_email")(query).map(_.headOption)
+    bucket.find[User]("dev_users", "by_email")(query).map(_.headOption).recover{case e: Throwable => Option.empty[User]}
   }
 
   def getById(idUser: String): Future[Option[User]] = {
-    bucket.get[User](idUser)
+    bucket.get[User](idUser).recover{case e: Throwable => Option.empty[User]}
   }
 
   def save(user: User) = {

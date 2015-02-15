@@ -1,22 +1,12 @@
 package controllers
 
-import java.util.UUID
-
-import models.{User}
+import models.User
 import play.Logger
-import play.api.data.Form
-import play.api.data.Forms._
-import play.api.libs.json.JsValue
 import play.api.mvc._
-//import play.api.Play.current
-import views.util.formdata.LoginData
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.Utils._
+import utils.Utils.getUserByToken
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-
-//object SecureController extends Controller {}
 
 case class AuthenticatedRequest[A](user: User, request: Request[A]) extends WrappedRequest[A](request)
 

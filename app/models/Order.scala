@@ -26,6 +26,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.functional._
 
 import scala.concurrent.Future
+import scala.util.Success
+import utils.Utils.createToken
 
 case class Order(id: String, idUser: String, status: Boolean, positions: List[Position]) {
 
@@ -103,15 +105,15 @@ object Order {
 //  }
 
 
-  implicit val positionReads: Reads[Position] = (
-    (__ \ "id_item").read[Long] ~
-    (__ \ "count").read[Long](min(0L))
-  )(Position.apply _)
-
-  implicit val positionWrites: Writes[Position] = (
-    (__ \ "id_item").write[Long] ~
-    (__ \ "count").write[Long]
-  )(unlift(Position.unapply))
+//  implicit val positionReads: Reads[Position] = (
+//    (__ \ "id_item").read[Long] ~
+//    (__ \ "count").read[Long](min(0L))
+//  )(Position.apply _)
+//
+//  implicit val positionWrites: Writes[Position] = (
+//    (__ \ "id_item").write[Long] ~
+//    (__ \ "count").write[Long]
+//  )(unlift(Position.unapply))
 
 
 //  implicit val orderReads: Reads[Order] = (
@@ -133,22 +135,26 @@ object Order {
   implicit val ec = PlayCouchbase.couchbaseExecutor
   def bucket = PlayCouchbase.bucket("default")
 
-  def nextId: String = {
-//    Option(orders.max(Ordering[Long].on[Order](_.id))).map(_.id + 1).getOrElse(1)
-    "11"
-  }
-  def create(items: Set[Position], userId: String) = {
-    val order = Order(nextId, userId, false, items.toList)
-    orders = order :: orders
-    Logger.info(order.toString)
-    order
+  def create(items: List[Position], userId: String) = {
+//    val order = Order(nextId, userId, false, items.toList)
+//    orders = order :: orders
+//    Logger.info(order.toString)
+//    order
+
+    val uuid = createToken
+    val order = Order(uuid, userId, status = false, items)
+    val result: Future[OpResult] = bucket.set[Order](uuid, order)
+    result.map {case x =>
+      if (x.isSuccess) Some(order)
+      else Option.empty[User]
+    }
   }
 
   var orders = Order("1", "1", false, List(Position(1, 4), Position(2, 4), Position(3, 4), Position(6, 4))) ::
     Order("2", "1", false, List(Position(1, 4))) :: Order("3", "2", false, List(Position(1, 4))) :: List()
 
   def getById(idOrder: String): Future[Option[Order]] = {
-    bucket.get[Order](idOrder)
+    bucket.get[Order](idOrder).recover{case e: Throwable => Option.empty[Order]}
   }
 
   def getByUserId(idUser: Long): List[Order] = {
