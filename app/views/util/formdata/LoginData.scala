@@ -2,6 +2,7 @@ package views.util.formdata
 
 import models.User
 import play.Play
+import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.concurrent.duration._
@@ -25,11 +26,20 @@ object LoginData {
     )(LoginData.apply)(LoginData.unapply)
     verifying("Invalid user name or password", {fields => fields match {
       case LoginData(eMail, password) =>
+        Logger.debug("in valid meth")
         val user = User.getByEmail(eMail)
         val isAuth = user.map({
-          case Some(u) => u.password == password
-          case None => false
-        }) recover {case e: Throwable => false}
+          case Some(u) => {
+            Logger.debug(u.toString)
+            u.password == password
+          }
+          case None => {
+            Logger.debug(s"non validate")
+            false
+          }
+        }) recover {case e: Throwable =>
+          Logger.debug("trowable ser!" + e)
+          false}
         Await.result(isAuth, 2 second)
     }})
   )

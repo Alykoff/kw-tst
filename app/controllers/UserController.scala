@@ -28,15 +28,18 @@ object UserController extends Controller {
   def msgErr(errorMsg: String) = Json.obj("status" -> "err", "message" -> errorMsg)
   def msgSuccessSavedUser(name: String) = Json.obj("status" -> "ok", "message" -> ("User '" + name + "' saved."))
   
-  def create = Action(BodyParsers.parse.json) { implicit request =>
-    val userResult = request.body.validate[ThinUser]
-    userResult.fold (
-      errors => BadRequest(msgErrParse(errors)),
-      thinUser => User.create(thinUser) match {
-        case None => BadRequest(msgErrSaveUser)
-        case _ => Ok(msgSuccessSavedUser(thinUser.name))
-      }
-    )
+  def create = Action.async(BodyParsers.parse.json) { implicit request =>
+    Future {
+      request.body.validate[ThinUser]
+    } flatMap { userResult =>
+      userResult.fold(
+        errors => Future(BadRequest(msgErrParse(errors))),
+        thinUser => User.create(thinUser) map {{
+          case None => BadRequest(msgErrSaveUser)
+          case _ => Ok(msgSuccessSavedUser(thinUser.name))
+        }}
+      )
+    }
   }
 
   def get(id: Long) = Action.async {

@@ -39,7 +39,7 @@ object StoreController extends Controller {
   )(unlift(Position.unapply))
 
   implicit val storeWriters: Writes[Store] =
-    (__ \ "positions").lazyWrite(Writes.set[Position](storeItemWriters)).contramap(unlift(Store.unapply))
+    (__ \ "positions").lazyWrite(Writes.list[Position](storeItemWriters)).contramap(unlift(Store.unapply))
 
   def getByPage(page: Long) = Action{ implicit request =>
     val store = Store.get(page * itemsInPage, page * (itemsInPage + 1))

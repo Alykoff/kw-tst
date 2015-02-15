@@ -25,5 +25,5 @@ POST    /store                      controllers.StoreController.get
 # заказ
 POST    /order                      controllers.OrderController.create
 POST    /order/:id                  controllers.OrderController.edit(id: Long)
-GET     /order/:id                  controllers.OrderController.get(id: Long)
-POST    /order/check/:id            controllers.OrderController.check(id: Long)
+GET     /order/:id                  controllers.OrderController.get(id: String)
+POST    /order/check/:id            controllers.OrderController.check(id: String)

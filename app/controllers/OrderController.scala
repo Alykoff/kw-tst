@@ -4,13 +4,16 @@ import models._
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{BodyParsers, Controller}
-import controllers.SecureController.Authenticated
+import controllers.Authenticated
 import play.api.libs.json.JsError
 import play.api.libs.json._
 import play.api.libs.json.util._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._
 import play.api.libs.functional.syntax._
+import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.concurrent.Future
 
 object OrderController extends Controller {
   implicit val positionReads: Reads[Position] = (
@@ -24,20 +27,20 @@ object OrderController extends Controller {
   )(unlift(Position.unapply))
 
   implicit val orderWrites: Writes[Order] = (
-    (__ \ "id_order").write[Long] ~
+    (__ \ "id_order").write[String] ~
     (__ \ "id_user").write[String] ~
     (__ \ "status").write[Boolean] ~
-    (__ \ "positions").lazyWrite(Writes.set[Position](positionWrites))
+    (__ \ "positions").lazyWrite(Writes.list[Position](positionWrites))
   ) (unlift(Order.unapply))
 
-  case class EditOrder(orderId: Long, items: Set[Position])
+  case class EditOrder(orderId: String, items: Set[Position])
 
   implicit val editOrderReads: Reads[EditOrder] = (
-    (__ \ "id_order").read[Long] ~
+    (__ \ "id_order").read[String] ~
     (__ \ "edit_items").lazyRead(Reads.set[Position](positionReads))
   ) (EditOrder.apply _)
   implicit val editOrderWrites: Writes[EditOrder] = (
-    (__ \ "id_order").write[Long] ~
+    (__ \ "id_order").write[String] ~
     (__ \ "edit_items").lazyWrite(Writes.set[Position](positionWrites))
   ) (unlift(EditOrder.unapply))
 
@@ -47,43 +50,44 @@ object OrderController extends Controller {
   implicit val createOrderWrites: Writes[CreateOrder] =
     (__ \ "edit_items").lazyWrite(Writes.set[Position](positionWrites)).contramap(unlift(CreateOrder.unapply))
 
-  case class CheckOrder(idOrder: Long)
-  implicit val checkOrderReads: Reads[CheckOrder] = (__ \ "id_order").read[Long].map(CheckOrder.apply)
+  case class CheckOrder(idOrder: String)
+  implicit val checkOrderReads: Reads[CheckOrder] = (__ \ "id_order").read[String].map(CheckOrder.apply)
 
   def msgSuccess(msg: String) = Json.obj("status" -> "ok", "message" -> msg)
 
-  def edit(id: Long) = Authenticated(BodyParsers.parse.json) { implicit request =>
+  def edit(id: Long) = Authenticated.async(BodyParsers.parse.json) { implicit request =>
     val editOrderResult = request.body.validate[EditOrder]
     editOrderResult.fold(
-      error => Ok("Bad data input"),
+      error => Future(Ok("Bad data input")),
       editOrder => {
         val user = request.user
-        val rawOrder = Order.getById(editOrder.orderId).filter(_.idUser == user.id).filter(!_.status)
-        rawOrder match {
+        def checkOrder(order: Order) = order.idUser == user.id && !order.status
+        val rawOrder = Order.getById(editOrder.orderId).map(_.filter(checkOrder))
+        rawOrder.map({
           case None => Ok("order not found")
           case Some(order) =>
             Logger.info(s"editOrder: $editOrder")
             val newOrder = Order.edit(order, editOrder)
             Logger.info(s"editOrder: ${Order.orders}")
             Ok(msgSuccess("saved"))
-        }
+        })
       }
     )
   }
 
-  def get(id: Long) = Authenticated { implicit request =>
+  def get(id: String) = Authenticated { implicit request =>
     Logger.info(Json.toJson(
-      EditOrder(1L, Set(Position(1, 4), Position(2, 4), Position(3, 4), Position(6, 4)))
+      EditOrder("1", Set(Position(1, 4), Position(2, 4), Position(3, 4), Position(6, 4)))
     ).toString)
-
-    Order.getById(id) match {
-      case Some(order) if order.idUser == request.user.id =>
-        Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(order)))
-      case Some(order) =>
-        BadRequest(UserController.msgErr("Permission error"))
-      case _ =>
-        BadRequest(UserController.msgErr("Not found order"))
-    }
+    Ok("")
+//    Order.getById(id) map{{
+//      case Some(order) if order.idUser == request.user.id =>
+//        Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(order)))
+//      case Some(order) =>
+//        BadRequest(UserController.msgErr("Permission error"))
+//      case _ =>
+//        BadRequest(UserController.msgErr("Not found order"))
+//    }}
   }
 
   def create = Authenticated(BodyParsers.parse.json) {implicit request =>
@@ -98,15 +102,15 @@ object OrderController extends Controller {
     )
   }
 
-  def check(id: Long) = Authenticated { implicit request =>
-    Order.getById(id) match {
-      case Some(order) if order.idUser == request.user.id =>
-        Logger.info(s"order: ${order.positions}")
-        Order.check(id)
-        Ok(msgSuccess("checked"))
-      case Some(order) => BadRequest(UserController.msgErr("Permission error"))
-      case _ => BadRequest(UserController.msgErr("Not found order"))
-    }
+  def check(id: String) = Authenticated { implicit request => Ok("")
+//    Order.getById(id) match {
+//      case Some(order) if order.idUser == request.user.id =>
+//        Logger.info(s"order: ${order.positions}")
+//        Order.check(id)
+//        Ok(msgSuccess("checked"))
+//      case Some(order) => BadRequest(UserController.msgErr("Permission error"))
+//      case _ => BadRequest(UserController.msgErr("Not found order"))
+//    }
   }
 
 }

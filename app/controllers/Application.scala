@@ -5,7 +5,7 @@ import play.api.Logger
 import play.api.mvc._
 import views.util.formdata.{SignUpData, LoginData}
 import play.api.Play.current
-import controllers.SecureController.{createToken, createSecuritySession, delSecuritySession, AUTH_TOKEN, AUTH_TOKEN_HEADER}
+import utils.Utils._
 
 object Application extends Controller {
   def index = Action {
@@ -25,7 +25,7 @@ object Application extends Controller {
       loginData => {
         val token = createToken
         createSecuritySession(token, loginData)
-        Redirect(routes.OrderController.get(1))
+        Redirect(routes.OrderController.get("1"))
           .withSession(AUTH_TOKEN -> token)
           .withHeaders(AUTH_TOKEN_HEADER -> token)
       }
