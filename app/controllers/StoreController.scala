@@ -5,8 +5,7 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.json.Writes._
 import scala.util.Success
-
-import models.Order.positionFormat
+import play.api.libs.concurrent.Execution.Implicits._
 
 object StoreController extends Controller {
   val errStatus = "status" -> "err"
@@ -25,10 +24,10 @@ object StoreController extends Controller {
     }
   }
 
-  def get = Action { implicit request =>
-    Store.getAll match {
-      case Some(store) => Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(store)))
-      case None => BadRequest(UserController.msgErr("bad data."))
+  def get = Action.async { implicit request =>
+    Store.getAll.map{case store =>
+      if (store.positions.isEmpty) BadRequest(Json.obj("status" -> "err", "message" -> "empty result"))
+      else Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(store)))
     }
   }
 }

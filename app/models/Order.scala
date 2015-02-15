@@ -72,7 +72,6 @@ case class Order(id: String, idUser: String, status: Boolean, positions: List[Po
 }
 
 object Order { self =>
-  implicit val positionFormat = Json.format[Position]
   implicit val orderFormat = Json.format[Order]
   implicit val ec = PlayCouchbase.couchbaseExecutor
 
@@ -102,21 +101,27 @@ object Order { self =>
     orders.filter(_.idUser == idUser)
   }
 
-  def edit(oldOrder: Order, updatedOrder: EditOrder): Option[Order] = {???
-//    val newOrder = oldOrder.getUpdatedOrder(updatedOrder.items)
-//    if (orders.filter(_.id == newOrder.id).nonEmpty)
-//      orders = (newOrder :: orders.takeWhile(_.id != newOrder.id)) ::: orders.dropWhile(_.id == newOrder.id)
-//    Some(newOrder)
+  def edit(oldOrder: Order, items: List[Position], status: Boolean): Future[Option[Order]] = {
+    val id = oldOrder.id
+    val order = Order(id, oldOrder.idUser, oldOrder.status, items)
+    bucket.set[Order](id, order).map {case x =>
+      if (x.isSuccess) Some(order)
+      else Option.empty[Order]
+    }.recover{case e: Throwable =>
+      Logger.warn(e.getMessage)
+      Option.empty[Order]
+    }
   }
 
   def check(idOrder: String): Future[Boolean] = { // TODO
     self.getById(idOrder).map{{
       case Some(order) =>
         Store.checkOrder(order.positions)
-        orders.foldLeft(List.empty[Order]) {case (acc, x) =>
-          if (x.id == idOrder) Order(x.id, x.idUser, true, x.positions) :: acc
-          else acc
-        }
+        self.edit(order, order.positions, status = true)
+//        orders.foldLeft(List.empty[Order]) {case (acc, x) =>
+//          if (x.id == idOrder) Order(x.id, x.idUser, true, x.positions) :: acc
+//          else acc
+//        }
         true
       case _ => false
     }}

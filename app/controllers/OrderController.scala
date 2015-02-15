@@ -9,40 +9,42 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 
-import models.Order.positionFormat
+import models.Position.positionFormat
 import models.Order.orderFormat
 
 object OrderController extends Controller {
   def msgSuccess(msg: String) = Json.obj("status" -> "ok", "message" -> msg)
 
   case class EditOrder(orderId: String, items: List[Position])
-
   implicit val editOrderFormat = Json.format[EditOrder]
+
   case class CreateOrder(items: List[Position])
-
   implicit val createdOrderFormat = Json.format[CreateOrder]
-  case class CheckOrder(idOrder: String)
 
+  case class CheckOrder(idOrder: String)
   implicit val checkOrderFormat = Json.format[CheckOrder]
 
   def edit(id: Long) = Authenticated.async(BodyParsers.parse.json) { implicit request =>
-    val editOrderResult = request.body.validate[EditOrder]
-    editOrderResult.fold(
-      error => Future(Ok("Bad data input")),
-      editOrder => {
-        val user = request.user
-        def checkOrder(order: Order) = order.idUser == user.id && !order.status
-        val rawOrder = Order.getById(editOrder.orderId).map(_.filter(checkOrder))
-        rawOrder.map({
-          case None => Ok("order not found")
-          case Some(order) =>
-            Logger.info(s"editOrder: $editOrder")
-            val newOrder = Order.edit(order, editOrder)
-            Logger.info(s"editOrder: ${Order.orders}")
-            Ok(msgSuccess("saved"))
-        })
-      }
-    )
+    Future {
+      request.body.validate[EditOrder]
+    } flatMap {
+      _.fold(
+        error => Future(Ok("Bad data input")),
+        editOrder => {
+          val user = request.user
+          def checkOrder(order: Order) = order.idUser == user.id && !order.status
+          val rawOrder = Order.getById(editOrder.orderId).map(_.filter(checkOrder))
+          rawOrder.map({
+            case None => Ok("order not found")
+            case Some(order) =>
+              Logger.info(s"editOrder: $editOrder")
+              val newOrder = Order.edit(order, editOrder.items, status = false)
+              Logger.info(s"editOrder: ${Order.orders}")
+              Ok(msgSuccess("saved"))
+          })
+        }
+      )
+    }
   }
 
   def get(id: String) = Authenticated.async{ implicit request =>

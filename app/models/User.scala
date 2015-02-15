@@ -70,11 +70,19 @@ object User {
   }
 
   def getById(idUser: String): Future[Option[User]] = {
-    bucket.get[User](idUser).recover{case e: Throwable => Option.empty[User]}
+    bucket.get[User](idUser).recover{case e: Throwable =>
+      Logger.warn(e.getMessage)
+      Option.empty[User]
+    }
   }
 
-  def save(user: User) = {
+  def save(user: User): Future[Boolean] = {
     bucket.set[User](user.id, user)
+      .map(_.isSuccess)
+      .recover{case e: Throwable =>
+        Logger.warn(e.getMessage)
+        false
+      }
   }
 
 }

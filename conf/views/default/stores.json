@@ -1,0 +1,8 @@
+{
+  "name":"stores",
+  "views":{
+    "by_id": {
+      "map": "function (doc, meta) { if (doc.id && doc.count) { emit(doc, null);  } }"
+    }
+  }
+}
