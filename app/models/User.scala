@@ -61,7 +61,12 @@ object User {
         .setRangeStart(ComplexKey.of(email))
         .setRangeEnd(ComplexKey.of(s"$email\uefff"))
         .setLimit(1)
-    bucket.find[User]("dev_users", "by_email")(query).map(_.headOption).recover{case e: Throwable => Option.empty[User]}
+    bucket.find[User]("dev_users", "by_email")(query)
+      .map(_.headOption)
+      .recover{case e: Throwable => {
+        Logger.warn(e.toString)
+        Option.empty[User]
+      }}
   }
 
   def getById(idUser: String): Future[Option[User]] = {

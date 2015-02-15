@@ -2,32 +2,26 @@ package models
 
 import controllers.OrderController.{CreateOrder, EditOrder}
 import play.api.Logger
+import utils.Const._
 
-import scala.collection.immutable.TreeSet
 import scala.util.{Failure, Success, Try}
 
-case class Position(idProduct: Long, count: Long) extends Ordered[Position] {
+case class Position(id: String, count: Long) extends Ordered[Position] {
   import scala.math.Ordered.orderingToOrdered
-  def compare(that: Position): Int = this.idProduct compare that.idProduct
-
+  def compare(that: Position): Int = this.id compare that.id
 }
 
 object Position {
   implicit val ord = new Ordering[Position] {
-    override def compare(x: Position, y: Position): Int = x.idProduct compare y.idProduct
+    override def compare(x: Position, y: Position): Int = x.id compare y.id
   }
 }
 
 case class ProductType(idProduct: Long, name: String, cost: Double)
 case class Store(positions: List[Position])
 
-
 object Store {
-  val BIGGER = 1
-  val SMALLER = -1
-  val EAQUALS = 0
-
-  var store = Store(List(Position(1, 12), Position(2, 22)))
+  var store = Store(List(Position("1", 12), Position("2", 22)))
 
   def get(from: Long, to: Long) = Success(store)
   def getAll: Option[Store] = Some(store)
@@ -54,7 +48,7 @@ object Store {
         (newAcc, newUpdatedSet)
       case SMALLER => (acc :+ value, updatedPositions)
       case EAQUALS => {
-        val newAcc = acc :+ Position(value.idProduct, value.count - updatedMin.count)
+        val newAcc = acc :+ Position(value.id, value.count - updatedMin.count)
         val newUpdatedSet = updatedPositions.drop(1)
         (newAcc, newUpdatedSet)
       }

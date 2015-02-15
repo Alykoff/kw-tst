@@ -5,19 +5,19 @@
     "status": false,
     "positions": [
       {
-        "idProduct": 1,
+        "id": "1",
         "count": 10
       },
       {
-        "idProduct": 2,
+        "id": "2",
         "count": 10
       },
       {
-        "idProduct": 3,
+        "id": "3",
         "count": 10
       },
       {
-        "idProduct": 6,
+        "id": "6",
         "count": 10
       }
     ]
@@ -28,15 +28,15 @@
     "status": false,
     "positions": [
       {
-        "idProduct": 1,
+        "id": "1",
         "count": 10
       },
       {
-        "idProduct": 3,
+        "id": "3",
         "count": 10
       },
       {
-        "idProduct": 4,
+        "id": "4",
         "count": 10
       }
     ]
@@ -47,7 +47,7 @@
     "status": false,
     "positions": [
       {
-        "idProduct": 5,
+        "id": "5",
         "count": 10
       }
     ]

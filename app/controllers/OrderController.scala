@@ -2,14 +2,9 @@ package controllers
 
 import models._
 import play.api.Logger
-import play.api.libs.json._
 import play.api.mvc.{BodyParsers, Controller}
-import play.api.libs.json.JsError
 import play.api.libs.json._
-import play.api.libs.json.util._
-import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._
-import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
@@ -18,17 +13,17 @@ import models.Order.positionFormat
 import models.Order.orderFormat
 
 object OrderController extends Controller {
+  def msgSuccess(msg: String) = Json.obj("status" -> "ok", "message" -> msg)
 
   case class EditOrder(orderId: String, items: List[Position])
+
   implicit val editOrderFormat = Json.format[EditOrder]
-
   case class CreateOrder(items: List[Position])
+
   implicit val createdOrderFormat = Json.format[CreateOrder]
-
   case class CheckOrder(idOrder: String)
-  implicit val checkOrderFormat = Json.format[CheckOrder]
 
-  def msgSuccess(msg: String) = Json.obj("status" -> "ok", "message" -> msg)
+  implicit val checkOrderFormat = Json.format[CheckOrder]
 
   def edit(id: Long) = Authenticated.async(BodyParsers.parse.json) { implicit request =>
     val editOrderResult = request.body.validate[EditOrder]

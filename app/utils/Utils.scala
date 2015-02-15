@@ -38,5 +38,4 @@ object Const {
   val BIGGER = 1
   val SMALLER = -1
   val EAQUALS = 0
-
 }
