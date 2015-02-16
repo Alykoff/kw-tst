@@ -20,7 +20,7 @@ object Utils {
   def getUserByToken(uuid: String): Option[String] = {
     Logger.info(s"uuid: $uuid, getUserId: ${Cache.getAs[String](uuid)}")
     Cache.getAs[String](uuid)
-    Some("1")
+    // Some("1")
   }
 
   def createToken = UUID.randomUUID.toString
