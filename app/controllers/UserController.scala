@@ -1,48 +1,40 @@
 package controllers
 
-import models.{ThinUser, User}
+import models.User
 import play.api.mvc._
-import play.api.libs.json.JsError
 import play.api.libs.json._
-import play.api.libs.json.util._
 import play.api.libs.json.Reads._
-import play.api.libs.json.Writes._
-import play.api.data.validation.ValidationError
+import utils.Utils.{msgErr, msgOk}
 
 import play.api.libs.functional.syntax._
 
 
 import scala.concurrent.Future
-//import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 object UserController extends Controller {
+  case class ThinUser(name: String, email: String, password: String)
   implicit val userReads: Reads[ThinUser] = (
     (__ \ "email").read[String](email keepAnd minLength[String](5)) ~
     (__ \ "name").read[String](minLength[String](2)) ~
     (__ \ "password").read[String](minLength[String](2))
   )(ThinUser.apply _)
 
-  val msgErrSaveUser = Json.obj("status" -> "err", "message" -> "Don't create or save.")
-  def msgErrParse(errors: Seq[(JsPath, Seq[ValidationError])]) = Json.obj("status" -> "err", "message" -> JsError.toFlatJson(errors))
-  def msgErr(errorMsg: String) = Json.obj("status" -> "err", "message" -> errorMsg)
-  def msgSuccessSavedUser(name: String) = Json.obj("status" -> "ok", "message" -> ("User '" + name + "' saved."))
-  
   def create = Action.async(BodyParsers.parse.json) { implicit request =>
+    def handleValidRequest(thinUser: ThinUser) = {
+      val newUser = User("", thinUser.email, thinUser.name, thinUser.password)
+      User.create(newUser) map {{
+        case None => BadRequest(msgErr("Don't create or save."))
+        case _ => Ok(msgOk("User '" + newUser.name + "' saved."))
+      }}
+    }
     Future {
       request.body.validate[ThinUser]
     } flatMap { userResult =>
       userResult.fold(
-        errors => Future(BadRequest(msgErrParse(errors))),
-        thinUser => User.create(thinUser) map {{
-          case None => BadRequest(msgErrSaveUser)
-          case _ => Ok(msgSuccessSavedUser(thinUser.name))
-        }}
+        errors => Future(BadRequest(msgErr("Bad data"))),
+        thinUser => handleValidRequest(thinUser)
       )
     }
-  }
-
-  def get(id: Long) = Action.async {
-    Future(Ok(""))
   }
 }

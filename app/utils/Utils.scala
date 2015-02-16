@@ -4,6 +4,7 @@ import java.util.UUID
 
 import models.User
 import play.Logger
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import views.util.formdata.LoginData
 import play.api.cache.Cache
@@ -33,6 +34,12 @@ object Utils {
     val uuid = request.session.get(AUTH_TOKEN)
     Try (Cache.remove(uuid.get))
   }
+
+  def msgErr(errorMsg: String) = Json.obj("status" -> "err", "message" -> errorMsg)
+
+  def msgOk(order: JsValue) = Json.obj("status" -> "ok", "result" -> Json.toJson(order))
+  def msgOk(msg: String) = Json.obj("status" -> "ok", "result" -> msg)
+
 }
 object Const {
   val BIGGER = 1

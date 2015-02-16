@@ -1,87 +1,82 @@
 package controllers
 
 import models._
-import play.api.Logger
 import play.api.mvc.{BodyParsers, Controller}
 import play.api.libs.json._
-import play.api.libs.json.Writes._
 import play.api.libs.concurrent.Execution.Implicits._
+import utils.Utils.{msgErr, msgOk}
 
 import scala.concurrent.Future
 
 import models.Order.orderFormat
 
 object OrderController extends Controller {
-  def msgSuccess(msg: String) = Json.obj("status" -> "ok", "message" -> msg)
-
-  case class EditOrder(orderId: String, items: List[Position])
-  implicit val editOrderFormat = Json.format[EditOrder]
-
-  case class CreateOrder(items: List[Position])
-  implicit val createdOrderFormat = Json.format[CreateOrder]
+  case class RequestOrder(items: List[Position])
+  implicit val createdOrderFormat = Json.format[RequestOrder]
 
   case class CheckOrder(idOrder: String)
   implicit val checkOrderFormat = Json.format[CheckOrder]
 
-  def edit(id: Long) = Authenticated.async(BodyParsers.parse.json) { implicit request =>
+  def edit(id: String) = Authenticated.async(BodyParsers.parse.json) { implicit request =>
+    def handleValidInput(editOrder: RequestOrder) = {
+      val user = request.user
+      def checkOrder(order: Order) = order.idUser == user.id && !order.status
+      val rawOrder = Order.getById(id).map(_.filter(checkOrder))
+      rawOrder.flatMap({
+        case None => Future(BadRequest("order not found"))
+        case Some(order) =>
+          Order.edit(order, editOrder.items, status = false).map {{
+            case None => BadRequest("Didn't save!")
+            case _ => Ok(msgOk("saved"))
+          }}
+      })
+    }
+
     Future {
-      request.body.validate[EditOrder]
+      request.body.validate[RequestOrder]
     } flatMap {
       _.fold(
-        error => Future(Ok("Bad data input")),
-        editOrder => {
-          val user = request.user
-          def checkOrder(order: Order) = order.idUser == user.id && !order.status
-          val rawOrder = Order.getById(editOrder.orderId).map(_.filter(checkOrder))
-          rawOrder.map({
-            case None => Ok("order not found")
-            case Some(order) =>
-              Logger.info(s"editOrder: $editOrder")
-              val newOrder = Order.edit(order, editOrder.items, status = false)
-              Logger.info(s"editOrder: ${Order.orders}")
-              Ok(msgSuccess("saved"))
-          })
-        }
+        error => Future(BadRequest("Bad data input")),
+        editOrder => handleValidInput(editOrder)
       )
     }
   }
 
   def get(id: String) = Authenticated.async{ implicit request =>
     Order.getById(id) map{{
-      case Some(order) if order.idUser == request.user.id =>
-        Ok(Json.obj("status" -> "ok", "result" -> Json.toJson(order)))
-      case Some(order) =>
-        BadRequest(UserController.msgErr("Permission error"))
-      case None =>
-        BadRequest(UserController.msgErr("Not found order"))
+      case Some(order) if order.idUser == request.user.id => Ok(msgOk(Json.toJson(order)))
+      case Some(order) => BadRequest(msgErr("Permission error"))
+      case None => BadRequest(msgErr("Not found order"))
     }}
   }
 
   def create = Authenticated.async(BodyParsers.parse.json) {implicit request =>
+    def handleValidRequest(createOrder: RequestOrder) = {
+      val userId = request.user.id
+      Order.create(createOrder.items, userId).map {{
+        case None => BadRequest(msgErr("Didn't save!"))
+        case _ => Ok(msgOk("saved"))
+      }}
+    }
     Future {
-      request.body.validate[CreateOrder]
+      request.body.validate[RequestOrder]
     } flatMap {
      _.fold(
         error => Future(BadRequest("Bad data input")),
-        createOrder => {
-          val userId = request.user.id
-          Order.create(createOrder.items, userId).map{{
-            case None => BadRequest("Didn't save!")
-            case _ => Ok(msgSuccess("saved"))
-          }}
-        }
+        createOrder => handleValidRequest(createOrder)
       )
     }
   }
-  // TODO
+
   def check(id: String) = Authenticated.async{ implicit request =>
-    Order.getById(id).map {{
+    Order.getById(id).flatMap {{
       case Some(order) if order.idUser == request.user.id =>
-        Logger.info(s"order: ${order.positions}")
-        Order.check(id)
-        Ok(msgSuccess("checked"))
-      case Some(order) => BadRequest(UserController.msgErr("Permission error"))
-      case _ => BadRequest(UserController.msgErr("Not found order"))
+        Order.check(id).map {{
+          case true => Ok(msgOk("checked"))
+          case false => BadRequest(msgErr("error"))
+        }}
+      case Some(order) => Future(BadRequest(msgErr("Permission error")))
+      case _ => Future(BadRequest(msgErr("Not found order")))
     }}
   }
 }

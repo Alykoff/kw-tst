@@ -28,7 +28,6 @@ import utils.Utils._
 case class User(id: String, name: String, email: String, password: String) {
 //  def save(): Future[OpResult] = User.save(this)
 }
-case class ThinUser(name: String, email: String, password: String)
 
 object User {
   implicit val userFormat = Json.format[User]
@@ -37,7 +36,7 @@ object User {
 
   def createUserId = createToken
 
-  def create(thinUser: ThinUser): Future[Option[User]] = {
+  def create(thinUser: User): Future[Option[User]] = {
     create(thinUser.name, thinUser.email, thinUser.password)
   }
 

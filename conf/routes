@@ -15,15 +15,14 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 # REST API
 # пользователь
-GET     /user/:id                   controllers.UserController.get(id: Long)
 POST    /user                       controllers.UserController.create
 
 # склад
-GET     /store/:page                controllers.StoreController.getByPage(page: Long)
+GET     /store/:page                controllers.StoreController.getByPage(page: Int)
 POST    /store                      controllers.StoreController.get
 
 # заказ
 POST    /order                      controllers.OrderController.create
-POST    /order/:id                  controllers.OrderController.edit(id: Long)
+POST    /order/:id                  controllers.OrderController.edit(id: String)
 GET     /order/:id                  controllers.OrderController.get(id: String)
 POST    /order/check/:id            controllers.OrderController.check(id: String)
