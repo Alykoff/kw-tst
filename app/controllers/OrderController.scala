@@ -9,7 +9,6 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 
-import models.Position.positionFormat
 import models.Order.orderFormat
 
 object OrderController extends Controller {
@@ -74,7 +73,7 @@ object OrderController extends Controller {
       )
     }
   }
-
+  // TODO
   def check(id: String) = Authenticated.async{ implicit request =>
     Order.getById(id).map {{
       case Some(order) if order.idUser == request.user.id =>

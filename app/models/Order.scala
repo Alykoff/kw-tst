@@ -1,11 +1,6 @@
 package models
 
-import controllers.OrderController.EditOrder
-import play.api.Logger
-import play.api.Play.current
-
 import scala.collection.immutable.TreeSet
-import utils.Const._
 import org.reactivecouchbase.CouchbaseRWImplicits.documentAsJsObjectReader
 import org.reactivecouchbase.CouchbaseRWImplicits.jsObjectToDocumentWriter
 import org.reactivecouchbase.Couchbase
@@ -15,59 +10,52 @@ import org.reactivecouchbase.ReactiveCouchbaseDriver
 import org.reactivecouchbase.play._
 import com.couchbase.client.protocol.views.{ComplexKey, Stale, Query}
 
-
+import utils.Const._
 import play.api.libs.json._
-import play.api.libs.json.util._
-import play.api.libs.json.Reads._
-import play.api.libs.json.Writes._
-import play.api.data.validation.ValidationError
-
-import play.api.libs.functional.syntax._
-import play.api.libs.functional._
+import play.api.Logger
+import play.api.Play.current
 
 import scala.concurrent.Future
-import scala.util.Success
 import utils.Utils.createToken
 
 case class Order(id: String, idUser: String, status: Boolean, positions: List[Position]) {
 
-//  def getUpdatedOrder(newOrder: Set[Position]): Order = {
-//    newOrder match {
-//      case items if items.isEmpty => this
-//      case items => getUpdatedOrder(TreeSet[Position]() ++ items)
-//    }
-//  }
-
-  private def gt(value: Position)(other: Position) = value.compare(other) == BIGGER
-
-  private def accValue(acc: TreeSet[Position], updatedPositions: TreeSet[Position], value: Position) = {
-    val updatedMin = updatedPositions.min
-    value.compare(updatedMin) match {
-      case BIGGER =>
-        val newAcc = acc ++ updatedPositions.takeWhile(gt(value)) + value
-        val newUpdatedSet = updatedPositions.dropWhile(gt(value))
-        (newAcc, newUpdatedSet)
-      case SMALLER => (acc + value, updatedPositions)
-      case EAQUALS => {
-        val newAcc = acc + Position(value.id, updatedMin.count)
-        val newUpdatedSet = updatedPositions.drop(1)
-        (newAcc, newUpdatedSet)
-      }
+  def getUpdatedOrder(newOrder: List[Position]): Order = {
+    newOrder match {
+      case items if items.isEmpty => this
+      case items => getHelperUpdatedOrder(items)
     }
   }
 
-  private def getUpdatedOrder(newPositions: Set[Position]): Order = {
-???
-//    def foldLeft = positions.foldLeft(TreeSet.empty[Position], newPositions) _
-//    val (updatedItems, newItems) = foldLeft { case ((acc, updatedPositions), value) =>
-//      updatedPositions match {
-//        case updatedPositions: TreeSet[Position] if updatedPositions.isEmpty => (acc + value, updatedPositions)
-//        case `updatedPositions` => accValue(acc, updatedPositions, value)
-//      }
-//    }
-//
-//    val items = (updatedItems ++ newItems).filter(_.count >= 0L)
-//    Order(id, idUser, status, items)
+  private def gt(value: Position)(other: Position) = value.compare(other) == BIGGER
+
+  private def accValue(acc: List[Position], updatedPositions: List[Position], value: Position) = {
+    val updatedMin = updatedPositions.min
+    value.compare(updatedMin) match {
+      case BIGGER =>
+        val newAcc = acc ::: (updatedPositions.takeWhile(gt(value)) :+ value)//.sortBy(_.id) //TODO !!!
+        val newUpdatedSet = updatedPositions.dropWhile(gt(value))
+        (newAcc, newUpdatedSet)
+      case SMALLER => (acc :+ value, updatedPositions)
+      case EAQUALS =>
+        val newAcc = acc :+ Position(value.id, updatedMin.count)
+        val newUpdatedSet = updatedPositions.drop(1)
+        (newAcc, newUpdatedSet)
+    }
+  }
+
+  private def getHelperUpdatedOrder(newPositions: List[Position]): Order = {
+    val sortedNewPos = newPositions.sortBy(_.id)
+    def foldLeft = positions.foldLeft(List.empty[Position], sortedNewPos) _
+    val (updatedItems, newItems) = foldLeft { case ((acc, updatedPositions), value) =>
+      updatedPositions match {
+        case updatedPositions: List[Position] if updatedPositions.isEmpty => (acc :+ value, updatedPositions)
+        case `updatedPositions` => accValue(acc, updatedPositions, value)
+      }
+    }
+
+    val items = (updatedItems ::: newItems).filter(_.count >= 0L)
+    Order(id, idUser, status, items)
   }
 }
 
@@ -113,15 +101,11 @@ object Order { self =>
     }
   }
 
-  def check(idOrder: String): Future[Boolean] = { // TODO
+  def check(idOrder: String): Future[Boolean] = {
     self.getById(idOrder).map{{
       case Some(order) =>
-        Store.checkOrder(order.positions)
+        Store.checkOrder(order.positions) // TODO !!!
         self.edit(order, order.positions, status = true)
-//        orders.foldLeft(List.empty[Order]) {case (acc, x) =>
-//          if (x.id == idOrder) Order(x.id, x.idUser, true, x.positions) :: acc
-//          else acc
-//        }
         true
       case _ => false
     }}
