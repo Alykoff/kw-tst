@@ -23,12 +23,13 @@ object Store { self =>
   def bucket = PlayCouchbase.bucket("default")
 
   def get(from: Int, to: Int): Future[Store] =  {
-    if (from >= to) Future(Store(List.empty[Position]))
+    if (from >= to || from < 0) Future(Store(List.empty[Position]))
     else {
       val query = new Query()
         .setIncludeDocs(true)
         .setStale(Stale.FALSE)
-        .setLimit(from - to).setSkip(from)
+        .setSkip(from)
+        .setLimit(to - from)
       val store = bucket.find[Position]("dev_stores", "by_id")(query)
         .map(Store(_))
         .recover { case e: Throwable => {
