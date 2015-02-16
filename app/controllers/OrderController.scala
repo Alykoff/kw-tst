@@ -23,10 +23,10 @@ object OrderController extends Controller {
       def checkOrder(order: Order) = order.idUser == user.id && !order.status
       val rawOrder = Order.getById(id).map(_.filter(checkOrder))
       rawOrder.flatMap({
-        case None => Future(BadRequest("order not found"))
+        case None => Future(BadRequest(msgErr("order not found")))
         case Some(order) =>
           Order.edit(order, editOrder.items, status = false).map {{
-            case None => BadRequest("Didn't save!")
+            case None => BadRequest(msgErr("Didn't save!"))
             case _ => Ok(msgOk("saved"))
           }}
       })
@@ -36,7 +36,7 @@ object OrderController extends Controller {
       request.body.validate[RequestOrder]
     } flatMap {
       _.fold(
-        error => Future(BadRequest("Bad data input")),
+        error => Future(BadRequest(msgErr("Bad data input"))),
         editOrder => handleValidInput(editOrder)
       )
     }
@@ -55,14 +55,14 @@ object OrderController extends Controller {
       val userId = request.user.id
       Order.create(createOrder.items, userId).map {{
         case None => BadRequest(msgErr("Didn't save!"))
-        case _ => Ok(msgOk("saved"))
+        case Some(order) => Ok(msgOk(Json.toJson(order)))
       }}
     }
     Future {
       request.body.validate[RequestOrder]
     } flatMap {
      _.fold(
-        error => Future(BadRequest("Bad data input")),
+        error => Future(BadRequest(msgErr("Bad data input"))),
         createOrder => handleValidRequest(createOrder)
       )
     }

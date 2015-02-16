@@ -25,13 +25,13 @@ object Order { self =>
 
   def bucket = PlayCouchbase.bucket("default")
 
-  def create(items: List[Position], userId: String) = {
+  def create(items: List[Position], userId: String): Future[Option[Order]] = {
     val uuid = createToken
     val order = Order(uuid, userId, status = false, items)
     val result: Future[OpResult] = bucket.set[Order](uuid, order)
     result.map {case x =>
       if (x.isSuccess) Some(order)
-      else Option.empty[User]
+      else Option.empty[Order]
     }
   }
 

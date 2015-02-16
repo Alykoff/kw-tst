@@ -4,7 +4,7 @@ import models.User
 import play.Logger
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.Utils.getUserByToken
+import utils.Utils.{getUserByToken, AUTH_TOKEN_HEADER}
 
 import scala.concurrent.Future
 
@@ -28,8 +28,7 @@ object Authenticated extends Controller { authSelf =>
 
   private[Authenticated] def base[A](implicit request: Request[A]) = {
     Future {
-      val token = Some("1") //request.headers.get(AUTH_TOKEN_HEADER)
-      Logger.debug(s"token: ${token}")
+      val token = request.headers.get(AUTH_TOKEN_HEADER)//Some("1")
       val user = token.flatMap(getUserByToken).map(User.getById) match {
         case None => Future.successful(Option.empty[User])
         case Some(x) => x
